@@ -2,6 +2,8 @@ package dev.hana.hanatestapp
 
 import android.content.Intent
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
@@ -23,13 +25,19 @@ class MainActivity : AppCompatActivity() {
 
     override fun onStart() {
         super.onStart()
-        Branch.sessionBuilder(this).withCallback { branchUniversalObject, linkProperties, error ->
-            if (error != null) {
-                Log.e("BranchSDK", "branch init failed. Caused by -" + error.message)
-            } else {
-                Log.i("BranchSDK", "branch init complete!")
+        Thread {
+            // Background thread
+            Handler(Looper.getMainLooper()).post {
+                // Now on main thread
+                Branch.sessionBuilder(this@MainActivity).withCallback { buo, lp, error ->
+                    if (error != null) {
+                        Log.e("BranchSDK", "Init failed: ${error.message}")
+                    } else {
+                        Log.i("BranchSDK", "Init success!")
+                    }
+                }.withData(intent?.data).init()
             }
-        }.withData(this.intent.data).init()
+        }.start()
     }
 
     override fun onNewIntent(intent: Intent) {
