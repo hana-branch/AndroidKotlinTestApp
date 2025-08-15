@@ -9,7 +9,10 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.lifecycle.lifecycleScope
 import io.branch.referral.Branch
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -25,19 +28,21 @@ class MainActivity : AppCompatActivity() {
 
     override fun onStart() {
         super.onStart()
-        Thread {
-            // Background thread
-            Handler(Looper.getMainLooper()).post {
-                // Now on main thread
-                Branch.sessionBuilder(this).withCallback { branchUniversalObject, linkProperties, error ->
-                    if (error != null) {
-                        Log.e("BranchSDK", "branch init failed. Caused by -" + error.message)
-                    } else {
-                        Log.i("BranchSDK", "branch init complete!")
+        lifecycleScope.launch {
+            MainApplication.taskCompletionFlow.collectLatest { isCompleted ->
+                if (isCompleted) {
+                    Handler(Looper.getMainLooper()).post {
+                        Branch.sessionBuilder(this@MainActivity).withCallback { branchUniversalObject, linkProperties, error ->
+                            if (error != null) {
+                                Log.e("BranchSDK", "branch init failed. Caused by -" + error.message)
+                            } else {
+                                Log.i("BranchSDK", "branch init complete!")
+                            }
+                        }.withData(intent?.data).init()
                     }
-                }.withData(intent?.data).init()
+                }
             }
-        }.start()
+        }
     }
 
     override fun onNewIntent(intent: Intent) {

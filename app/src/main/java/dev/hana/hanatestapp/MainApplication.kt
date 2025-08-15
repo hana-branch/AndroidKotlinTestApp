@@ -3,11 +3,27 @@ package dev.hana.hanatestapp
 import android.app.Application
 import android.os.StrictMode
 import android.os.StrictMode.ThreadPolicy
+import android.util.Log
 import io.branch.referral.Branch
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 class MainApplication: Application () {
+    companion object {
+        private val _taskCompletionFlow = MutableStateFlow(false)
+        val taskCompletionFlow: StateFlow<Boolean> get() = _taskCompletionFlow
+    }
+
+    private fun simulateBackgroundTask() {
+        Thread {
+            Log.i("BranchSDK-Delay", "5 seconds Delay Simulate Start")
+            Thread.sleep(5000)
+            _taskCompletionFlow.value = true
+        }.start()
+    }
+
     override fun onCreate() {
         super.onCreate()
 
@@ -29,6 +45,7 @@ class MainApplication: Application () {
         // Initialize the Branch SDK in a background thread
         GlobalScope.launch(kotlinx.coroutines.Dispatchers.IO) {
             Branch.getAutoInstance(applicationContext)
+            simulateBackgroundTask()
         }
     }
 }
