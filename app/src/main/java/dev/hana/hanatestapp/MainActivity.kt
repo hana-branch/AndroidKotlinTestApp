@@ -29,11 +29,11 @@ class MainActivity : AppCompatActivity() {
             // Background thread
             Handler(Looper.getMainLooper()).post {
                 // Now on main thread
-                Branch.sessionBuilder(this@MainActivity).withCallback { buo, lp, error ->
+                Branch.sessionBuilder(this).withCallback { branchUniversalObject, linkProperties, error ->
                     if (error != null) {
-                        Log.e("BranchSDK", "Init failed: ${error.message}")
+                        Log.e("BranchSDK", "branch init failed. Caused by -" + error.message)
                     } else {
-                        Log.i("BranchSDK", "Init success!")
+                        Log.i("BranchSDK", "branch init complete!")
                     }
                 }.withData(intent?.data).init()
             }
